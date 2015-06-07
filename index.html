@@ -8,16 +8,16 @@
 <body>
      <div class="container">
          <form name="parserForm">
-             <div class="form-line">
-                 <div class="form__radio-group">
-                     <input type="radio" name="type_eye" id="type_eye_left"/>
-                     Левый глаз
-                 </div>
-                 <div class="form__radio-group">
-                    <input type="radio" name="type_eye" id="type_eye_right"/>
-                    Правый глаз
-                 </div>
-             </div>
+             <!--<div class="form-line">-->
+                 <!--<div class="form__radio-group">-->
+                     <!--<input type="radio" name="type_eye" id="type_eye_left"/>-->
+                     <!--Левый глаз-->
+                 <!--</div>-->
+                 <!--<div class="form__radio-group">-->
+                    <!--<input type="radio" name="type_eye" id="type_eye_right"/>-->
+                    <!--Правый глаз-->
+                 <!--</div>-->
+             <!--</div>-->
              <div class="form-line">
                  <input type="file" name="file" id="file"/>
              </div>
@@ -28,6 +28,9 @@
          <div>
             <img id="output" src="" />
          </div>
+         <button type="button" id="unmouse">unmouse</button>
+         <button type="button" id="save">save</button>
+         <div id="status" style="height: 50px;"></div>
          <div class="canvas-container">
             <canvas id="canvas" width="800" height="800" style="border:1px solid #d3d3d3;">
 

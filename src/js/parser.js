@@ -6,6 +6,8 @@
     var canvasOffset = $("#canvas").offset();
     var offsetX = canvasOffset.left;
     var offsetY = canvasOffset.top;
+    var centerX = canvas.width/2;
+    var centerY = canvas.height/2;
 
     var pi2 = Math.PI * 2;
     var resizerRadius = 8;
@@ -14,8 +16,8 @@
         x: 0,
         y: 0
     };
-    var imageX = 31;
-    var imageY = -258;
+    var imageX = 51;
+    var imageY = -238;
     var imageWidth, imageHeight, imageRight, imageBottom;
     var draggingImage = false;
     var startX;
@@ -23,7 +25,7 @@
     var img;
 
     var mapCircle = [
-        {radius:314,width:22,color:{first:'red',second:'black'}},
+        //{radius:314,width:22,color:{first:'red',second:'black'}},
         //{radius:292,width:24,color:{first:'green',second:'blue'}},
         //{radius:264,width:33,color:{first:'red',second:'black'}},
         //{radius:228,width:40,color:{first:'green',second:'blue'}},
@@ -33,6 +35,67 @@
         //{radius:31,width:50,color:{first:'green',second:'blue'}}
     ];
 
+    var imageMap = [];
+    var dataMap = [];
+    function polygon(ctx, x, y, radius, sides, startAngle, anticlockwise) {
+      if (sides < 3) return;
+      var a = (Math.PI * 2)/sides;
+      a = anticlockwise?-a:a;
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(startAngle);
+      ctx.moveTo(radius,0);
+      for (var i = 1; i < sides; i++) {
+        ctx.lineTo(radius*Math.cos(a*i),radius*Math.sin(a*i));
+        //console.log(radius*Math.cos(a*i),radius*Math.sin(a*i));
+      }
+      ctx.closePath();
+      ctx.restore();
+    }
+
+    function findPos(obj) {
+        var curleft = 0, curtop = 0;
+        if (obj.offsetParent) {
+            do {
+                curleft += obj.offsetLeft;
+                curtop += obj.offsetTop;
+            } while (obj = obj.offsetParent);
+            return { x: curleft, y: curtop };
+        }
+        return undefined;
+    }
+
+    function rgbToHex(r, g, b) {
+        if (r > 255 || g > 255 || b > 255)
+            throw "Invalid color component";
+        return ((r << 16) | (g << 8) | b).toString(16);
+    }
+
+    $('#canvas').click(function(e) {
+        var pos = findPos(this);
+        var x = e.pageX - pos.x;
+        var y = e.pageY - pos.y;
+        var coord = "x=" + x + ", y=" + y;
+
+        //console.log(x,y);
+        dataMap.push({x:x,y:y});
+        var c = this.getContext('2d');
+        var p = c.getImageData(x, y, 1, 1).data;
+        console.log(p);
+        var hex = "#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
+        $('#status').html(coord + "<br>" + hex);
+    });
+
+    $('#canvas').mouseout(function(e) {
+        imageMap.push(dataMap);
+        dataMap = [];
+    });
+
+    function saveToLocalStorage() {
+        localStorage.setItem('imageMap',JSON.stringify(imageMap));
+    }
+
+    $('#save').click(saveToLocalStorage);
 
     function openFile(event) {
         var input = event.target;
@@ -58,28 +121,162 @@
         reader.readAsDataURL(input.files[0]);
     }
 
+    function unBindMouse() {
+        $("#canvas").unbind('mousedown',handleMouseDown);
+        $("#canvas").unbind('mouseup',handleMouseUp);
+        $("#canvas").unbind('mouseout',handleMouseOut);
+    }
+
+    $('#unmouse').click(unBindMouse);
+
     function degreesToRadians (degrees) {
         return degrees * (Math.PI/180);
     }
 
+    function ff() {
+        ctx.moveTo(300,0);
+        ctx.lineTo(293, 78)
+    }
+
     function drawMap() {
-        for(var j = 0;j<mapCircle.length;j++) {
-            var mapObj = mapCircle[j];
-            for(var i=0;i<24;i++) {
-                var start = degreesToRadians(i*15) + degreesToRadians(7.5);
-                var end = degreesToRadians((i+1)*15)+ degreesToRadians(7.5);
-                ctx.globalAlpha = 0.3;
-                ctx.beginPath();
-                ctx.arc(380, 380, mapObj.radius, start, end, false);
-                ctx.lineWidth = mapObj.width;
+        //for(var j = 0;j<mapCircle.length;j++) {
+        //    var mapObj = mapCircle[j];
+        //    for(var i=0;i<24;i++) {
+        //        var start = degreesToRadians(i*15) + degreesToRadians(7.5);
+        //        var end = degreesToRadians((i+1)*15)+ degreesToRadians(7.5);
+        //        ctx.beginPath();
+        //        ctx.arc(centerX, centerX, mapObj.radius, start, end, false);
+        //        ctx.lineWidth = mapObj.width;
+        //
+        //        ctx.strokeStyle = ((i % 2) === 0?mapObj.color.first:mapObj.color.second);
+        //
+        //        ctx.stroke();
+        //        ctx.closePath();
+        //
+        //    }
+        //}
+        //312
 
-                ctx.strokeStyle = ((i % 2) === 0?mapObj.color.first:mapObj.color.second);
 
-                ctx.stroke();
-                ctx.closePath();
+        /*
+        *
+        * РУЧНОЙ РЕЖИМ
+        * */
 
-            }
-        }
+        var hh = 312;
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(21, 21, 197)";
+        polygon(ctx,centerX,centerY,hh,24,-Math.PI/2.2);
+        ctx.stroke();
+        //312 - 20
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(242, 14, 14)";
+        polygon(ctx,centerX,centerY,hh - 18,24,-Math.PI/2.2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(21, 21, 197)";
+        polygon(ctx,centerX,centerY,hh - 18 - 30,24,-Math.PI/2.2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(242, 14, 14)";
+        polygon(ctx,centerX,centerY,hh - 18 - 30 - 35 ,24,-Math.PI/2.2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(21, 21, 197)";
+        polygon(ctx,centerX,centerY,hh - 18 - 30 - 35 - 43 ,24,-Math.PI/2.2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(242, 14, 14)";
+        polygon(ctx,centerX,centerY,hh - 18 - 30 - 35 - 43 - 39 ,24,-Math.PI/2.2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(21, 21, 197)";
+        polygon(ctx,centerX,centerY,hh - 18 - 30 - 35 - 43 - 39 - 51 ,24,-Math.PI/2.2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(242, 14, 14)";
+        polygon(ctx,centerX,centerY,hh - 18 - 30 - 35 - 43 - 39 - 51 - 27 ,24,-Math.PI/2.2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(21, 21, 197)";
+        polygon(ctx,centerX,centerY,hh - 18 - 30 - 35 - 43 - 39 - 51 - 27 - 23 ,24,-Math.PI/2.2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = "rgb(242, 14, 14)";
+        polygon(ctx,centerX,centerY,hh - 18 - 30 - 35 - 43 - 39 - 51 - 27 - 23 - 25 ,24,-Math.PI/2.2);
+        ctx.stroke();
+
+
+        //ctx.beginPath();
+        //ctx.strokeStyle = "rgb(21, 21, 197)";
+        //ctx.moveTo(centerX-185,centerY-251);
+        //ctx.lineTo(centerX-248,centerY-190);
+        //ctx.lineTo(centerX-234,centerY-180);
+        //ctx.lineTo(centerX-178,centerY-235);
+        //ctx.lineTo(centerX-185,centerY-251);
+        //ctx.stroke();
+        //ctx.closePath();
+        //
+        //ctx.beginPath();
+        //ctx.strokeStyle = "rgb(242, 14, 14)";
+        //ctx.moveTo(centerX-248,centerY-190);
+        //ctx.lineTo(centerX-290,centerY-119);
+        //ctx.lineTo(centerX-271,centerY-113);
+        //ctx.lineTo(centerX-234,centerY-180);
+        //ctx.lineTo(centerX-248,centerY-190);
+        //ctx.stroke();
+        //ctx.closePath();
+        //
+        //ctx.beginPath();
+        //ctx.strokeStyle = "rgb(21, 21, 197)";
+        //ctx.moveTo(centerX-290,centerY-119);
+        //ctx.lineTo(centerX-311,centerY-40);
+        //ctx.lineTo(centerX-291,centerY-38);
+        //ctx.lineTo(centerX-271,centerY-113);
+        //ctx.lineTo(centerX-290,centerY-119);
+        //ctx.stroke();
+        //ctx.closePath();
+        //
+        ///////////////////////////////////////////
+        //ctx.beginPath();
+        //ctx.strokeStyle = "rgb(21, 21, 197)";
+        //ctx.moveTo(centerX-233,centerY-179);//prev point #4 (-1)
+        //ctx.lineTo(centerX-270,centerY-112);//prev point #3 (-1)
+        //ctx.lineTo(centerX-246,centerY-101);
+        //ctx.lineTo(centerX-210,centerY-160);
+        //ctx.lineTo(centerX-233,centerY-179);
+        //ctx.stroke();
+        //ctx.closePath();
+        //
+        //ctx.beginPath();
+        //ctx.strokeStyle = "rgb(242, 14, 14)";
+        //ctx.moveTo(centerX-209,centerY-159);//prev point #4 (-1)
+        //ctx.lineTo(centerX-245,centerY-102);//prev point #3 (-1)
+        //ctx.lineTo(centerX-210,centerY-88);
+        //ctx.lineTo(centerX-181,centerY-140);
+        //ctx.lineTo(centerX-209,centerY-159);
+        //ctx.stroke();
+        //ctx.closePath();
+
+        //ctx.beginPath();
+        //ctx.strokeStyle = "rgb(242, 14, 14)";
+        //ctx.moveTo(centerX-180,centerY-139);//prev point #4 (-1)
+        //ctx.lineTo(centerX-209,centerY-101);//prev point #3 (-1)
+        //ctx.lineTo(centerX-210,centerY-88);
+        //ctx.lineTo(centerX-181,centerY-139);
+        //ctx.lineTo(centerX-180,centerY-139);
+        //ctx.stroke();
+        //ctx.closePath();
+
+
     }
 
 
@@ -110,13 +307,14 @@
             ctx.closePath();
             ctx.stroke();
         }
+        var padding = 75;
         ctx.beginPath();
         ctx.strokeStyle = "rgb(242, 14, 14)";
-        ctx.arc(380, 380, 325, 0, 2 * Math.PI, true);
-        ctx.moveTo(55, 380);
-        ctx.lineTo(706, 380);
-        ctx.moveTo(380, 55);
-        ctx.lineTo(380, 706);
+        ctx.arc(centerX, centerY, 325, 0, 2 * Math.PI, true);
+        ctx.moveTo(padding, centerY);
+        ctx.lineTo((centerX*2)-padding, centerY);
+        ctx.moveTo(centerX, padding);
+        ctx.lineTo(centerX, (centerY*2)-padding);
         ctx.lineWidth = 1;
         ctx.closePath();
         ctx.stroke();
@@ -260,3 +458,60 @@
 
     $('#file').bind('change',openFile);
 })(jQuery);
+
+
+//var example = document.getElementById("canvas");
+//     var ctx = example.getContext('2d');
+//var cX = canvas.width/2;
+//var cY = canvas.height/2;
+//
+//for(var i=0;i<5;i++) {
+//var x = 20;
+//var y = 10;
+//  if(i===0) {
+//    ctx.beginPath();
+//ctx.moveTo(cX,cY);
+//ctx.lineTo(cX-(x+10),cY-y);
+//ctx.lineTo(cX-(x+10),cY+y);
+//ctx.lineTo(cX,cY);
+//ctx.stroke();
+//ctx.closePath();
+//  }
+//  else {
+//    ctx.beginPath();
+//ctx.moveTo(cX-(x*i+10+i),cY-(y+1+((i-1)*7)));
+//ctx.lineTo(cX-(x*i+10+i),cY+(y+1+((i-1)*7)));
+//ctx.lineTo(cX-(x*(i+1)+10+i),cY+(y+1+(i*7)));
+//ctx.lineTo(cX-(x*(i+1)+10+i),cY-(y+1+(i*7)));
+//ctx.lineTo(cX-(x*i+10+i),cY-(y+1+((i-1)*7)));
+//ctx.stroke();
+//ctx.closePath();
+//  }
+//}
+
+
+// ctx.beginPath();
+// ctx.moveTo(cX,cY);
+// ctx.lineTo(cX-30,cY-10);
+// ctx.lineTo(cX-30,cY+10);
+// ctx.lineTo(cX,cY);
+// ctx.stroke();
+// ctx.closePath();
+
+// ctx.beginPath();
+// ctx.moveTo(cX-31,cY-11);
+// ctx.lineTo(cX-31,cY+11);
+// ctx.lineTo(cX-51,cY+18);
+// ctx.lineTo(cX-51,cY-18);
+// ctx.lineTo(cX-31,cY-11);
+// ctx.stroke();
+// ctx.closePath();
+
+// ctx.beginPath();
+// ctx.moveTo(cX-52,cY-19);
+// ctx.lineTo(cX-52,cY+19);
+// ctx.lineTo(cX-72,cY+27);
+// ctx.lineTo(cX-72,cY-27);
+// ctx.lineTo(cX-52,cY-19);
+// ctx.stroke();
+// ctx.closePath();
